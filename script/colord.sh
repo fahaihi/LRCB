@@ -73,7 +73,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   CompressionTime=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   CompressionMemory=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
   SourceFileSize=$(ls -lah --block-size=1 ${FileBaseName}.reads | awk '/^[-d]/ {print $5}') #以字节为单位显示原始文件大小
-  CompressionRatio=$(echo "scale=3; 8*${CompressedFileSize}/${SourceFileSize}" | bc)
+  CompressionRatio=$(echo "scale=3; ${CompressedFileSize}/${SourceFileSize}" | bc)
   echo "CompressedFileSize : ${CompressedFileSize} B"
   echo "CompressionTime : ${CompressionTime} h:mm:ss or m:ss"
   echo "CompressionTime : $(timer_reans $CompressionTime) S"
