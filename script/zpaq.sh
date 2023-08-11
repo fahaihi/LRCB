@@ -1,6 +1,8 @@
 #!/bin/bash
 # 运行脚本
-# nohup srun -p gpu1 -N 1 -c 16 ./colord.sh > /public/home/jd_sunhui/genCompressor/LRCB/result/colord_16.out &
+# nohup srun -p gpu1 -N 1 -c 16 ./zpaq.sh > /public/home/jd_sunhui/genCompressor/LRCB/result/zpaq_16.out &
+module load compiler/gnu/gcc-compiler-8.4.0
+gcc -v
 echo "1 设置实验参数，为了避免错误，使用绝对路径."
 D1="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/ERR5396170"      # Zymo
 D2="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/rel_6"           # Human-NA12878
@@ -17,7 +19,7 @@ D12="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.100"    # S
 D13="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.150"    # SimERR-15%
 D14="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.200"    # SimERR-20%
 ResultDir="/public/home/jd_sunhui/genCompressor/LRCB/result"
-Algorithm="colord"
+Algorithm="zpaq"
 threads=16
 # 将时间戳转换为秒
 function timer_reans() {
@@ -62,14 +64,14 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   FileBaseName=$(basename ${SourceDataDir})
 
   echo "3.1 将数据拷贝至工作目录下" # 避免脏数据
-  cp ${SourceDataDir}.fastq ${mkresdir}
-  #cp ${SourceDataDir}.reads ${mkresdir}
+  #cp ${SourceDataDir}.fastq ${mkresdir}
+  cp ${SourceDataDir}.reads ${mkresdir}
 
   echo "3.2 调用${Algorithm}进行文件压缩操作"
   echo "compression..."
-  (/bin/time -v -p colord compress-ont -q org -p ratio -t ${threads} ${FileBaseName}.fastq ${FileBaseName}.colord) >${FileBaseName}_${threads}_com.log 2>&1
+  (/bin/time -v -p zpaq a ${FileBaseName}.zpaq ${FileBaseName}.reads -method 5 -threads ${threads}) >${FileBaseName}_${threads}_com.log 2>&1
   echo "统计压缩信息"
-  CompressedFileSize=$(grep "DNA size" ${FileBaseName}_${threads}_com.log | awk '{print $4}')
+  CompressedFileSize=$(ls -lah --block-size=1 ${FileBaseName}.zpaq | awk '/^[-d]/ {print $5}')
   CompressionTime=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   CompressionMemory=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
   SourceFileSize=$(ls -lah --block-size=1 ${FileBaseName}.reads | awk '/^[-d]/ {print $5}') #以字节为单位显示原始文件大小
@@ -83,7 +85,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
 
   echo "3.3 调用${Algorithm}进行文件解压缩操作"
   echo "de-compression..."
-  (/bin/time -v -p colord decompress ${FileBaseName}.colord ${FileBaseName}.colord.fastq) >${FileBaseName}_${threads}_decom.log 2>&1
+  (/bin/time -v -p zpaq x ${FileBaseName}.zpaq -method 5 -threads ${threads}) > ${FileBaseName}_${threads}_decom.log 2>&1
   echo "统计压缩信息"
   DeCompressionTime=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   DeCompressionMemory=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
@@ -100,12 +102,32 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   echo "DeCompressionMemory (KB): ${DeCompressionMemory}" >>${FileBaseName}_${threads}.log
 
   echo "3.5 清除脏文件"
-  #rm -rf ${FileBaseName}.reads
-  rm -rf ${FileBaseName}.fastq
-  rm -rf ${FileBaseName}.colord
-  rm -rf ${FileBaseName}.colord.fastq
+  rm -rf ${FileBaseName}.reads
+  #rm -rf ${FileBaseName}.fastq
+  rm -rf ${FileBaseName}.zpaq
 
   echo "3.6 将结果存储在CSV文件"
   echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, ${CompressionTime}, ${CompressionMemory}, ${DeCompressionTime}, ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
 done
 
+
+
+
+
+exit 0
+#!/bin/bash
+# nohup srun -p gpu1 -c 8 /public/home/jd_sunhui/genCompressor/longReads/script/zpaq.sh ERR5396170 8 > result_ERR5396170/ERR5396170.zpaq &
+scriptPath="/public/home/jd_sunhui/genCompressor/longReads/script/"
+file=$1
+threads=$2
+echo "*******************************************************************************************"
+echo "a script files for zpaq test compression and de_compression"
+# colord输出的单位为B
+echo "compression"
+#/bin/time -v -p colord compress-ont -q org -p ratio -t ${threads} ${file}.fastq ${file}.colord
+/bin/time -v -p zpaq a ${file}.zpaq ${file}.reads -method 5 -threads ${threads}
+ls -l --block-size=1 ${file}.reads
+echo "*******************************************************************************************"
+echo "de-compression"
+#/bin/time -v -p colord decompress ${file}.colord ${file}.colord.fastq
+/bin/time -v -p zpaq x ${file}.zpaq -method 5 -threads ${threads} -to ${file}.zpaq_reads
