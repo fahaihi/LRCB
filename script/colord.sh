@@ -1,6 +1,6 @@
 #!/bin/bash
-# nohup srun -p gpu1 -c 8 /public/home/jd_sunhui/genCompressor/LRCB/script/colord.sh ERR5396170 8 > result_ERR5396170/ERR5396170.colord &
-# nohup srun -p gpu1 -N 1 -c 16 ./colord.sh > colord_16.out &
+# 运行脚本
+# nohup srun -p gpu1 -N 1 -c 16 ./colord.sh > /public/home/jd_sunhui/genCompressor/LRCB/result/colord_16.out &
 echo "1 设置实验参数，为了避免错误，使用绝对路径."
 D1="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/ERR5396170"      # Zymo
 D2="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/rel_6"           # Human-NA12878
@@ -20,7 +20,6 @@ ResultDir="/public/home/jd_sunhui/genCompressor/LRCB/result"
 Algorithm="colord"
 threads=16
 # 将时间戳转换为秒
-echo "DataSet, CompressedFileSize (B),CompressionRatio (bits/base),CompressionTime (S),CompressionMemory (KB),DeCompressionTime (S),DeCompressionMemory (KB)" > ${Algorithm}_${threads}.csv
 function timer_reans() {
   if [[ $1 == *"."* ]]; then
     #echo "The string contains a dot. ==> m:ss"
@@ -52,8 +51,12 @@ else
   echo "Directory already exists: $directory"
 fi
 
+# 创建一个写入记录的VCF文件
+echo "DataSet, CompressedFileSize (B),CompressionRatio (bits/base),CompressionTime (S),CompressionMemory (KB),DeCompressionTime (S),DeCompressionMemory (KB)" > ${mkresdir}/${Algorithm}_${threads}.csv
+cd ${mkresdir} # 切换到算法工作目录, colord输出的单位为B
+
 echo "3 执行算法压缩及解压缩操作"
-for SourceDataDir in D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4; do #D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4
+for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D14; do #D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4
   echo "-------------------------------------------------------------------------------------------"
   echo "SourceDataDir : ${SourceDataDir}"
   FileBaseName=$(basename ${SourceDataDir})
@@ -63,7 +66,6 @@ for SourceDataDir in D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4
   cp ${SourceDataDir}.reads ${mkresdir}
 
   echo "3.2 调用${Algorithm}进行文件压缩操作"
-  cd ${mkresdir} # 切换到算法工作目录, colord输出的单位为B
   echo "compression..."
   (/bin/time -v -p colord compress-ont -q org -p ratio -t ${threads} ${FileBaseName}.fastq ${FileBaseName}.colord) >${FileBaseName}_${threads}_com.log 2>&1
   echo "统计压缩信息"
@@ -97,13 +99,13 @@ for SourceDataDir in D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4
   echo "DeCompressionTime (S)   : $(timer_reans $DeCompressionTime)" >>${FileBaseName}_${threads}.log
   echo "DeCompressionMemory (KB): ${DeCompressionMemory}" >>${FileBaseName}_${threads}.log
 
-  echo "3.4 清除脏文件"
+  echo "3.5 清除脏文件"
   rm -rf ${FileBaseName}.reads
   rm -rf ${FileBaseName}.fastq
   rm -rf ${FileBaseName}.colord
   rm -rf ${FileBaseName}.colord.fastq
 
-  echo "3.5 将结果存储在CSV文件"
-  echo "${CompressedFileSize}, ${CompressionRatio}, ${CompressionTime}, ${CompressionMemory}, ${DeCompressionTime}, ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
+  echo "3.6 将结果存储在CSV文件"
+  echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, ${CompressionTime}, ${CompressionMemory}, ${DeCompressionTime}, ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
 done
 
