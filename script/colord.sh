@@ -106,6 +106,6 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   rm -rf ${FileBaseName}.colord.fastq
 
   echo "3.6 将结果存储在CSV文件"
-  echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, ${CompressionTime}, ${CompressionMemory}, ${DeCompressionTime}, ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
+  echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, $(timer_reans $CompressionTime), ${CompressionMemory}, $(timer_reans $DeCompressionTime), ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
 done
 
