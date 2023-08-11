@@ -1,0 +1,1 @@
+LRCB (Long Reads Compressor Benchmark) is an experimental long-reads compression testing project. The test code, data analysis, and performance evaluations are forthcoming and will be updated soon.
