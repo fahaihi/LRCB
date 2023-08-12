@@ -63,7 +63,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
 
   echo "3.1 将数据拷贝至工作目录下" # 避免脏数据
   cp ${SourceDataDir}.fastq ${mkresdir}
-  #cp ${SourceDataDir}.reads ${mkresdir}
+  cp ${SourceDataDir}.reads ${mkresdir}
 
   echo "3.2 调用${Algorithm}进行文件压缩操作"
   echo "compression..."
@@ -73,7 +73,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   CompressionTime=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   CompressionMemory=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
   SourceFileSize=$(ls -lah --block-size=1 ${FileBaseName}.reads | awk '/^[-d]/ {print $5}') #以字节为单位显示原始文件大小
-  CompressionRatio=$(echo "scale=3; ${CompressedFileSize}/${SourceFileSize}" | bc)
+  CompressionRatio=$(echo "scale=3; 8*${CompressedFileSize}/${SourceFileSize}" | bc)
   echo "CompressedFileSize : ${CompressedFileSize} B"
   echo "CompressionTime : ${CompressionTime} h:mm:ss or m:ss"
   echo "CompressionTime : $(timer_reans $CompressionTime) S"
@@ -100,7 +100,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   echo "DeCompressionMemory (KB): ${DeCompressionMemory}" >>${FileBaseName}_${threads}.log
 
   echo "3.5 清除脏文件"
-  #rm -rf ${FileBaseName}.reads
+  rm -rf ${FileBaseName}.reads
   rm -rf ${FileBaseName}.fastq
   rm -rf ${FileBaseName}.colord
   rm -rf ${FileBaseName}.colord.fastq
