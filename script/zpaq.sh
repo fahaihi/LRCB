@@ -4,20 +4,6 @@
 module load compiler/gnu/gcc-compiler-8.4.0
 gcc -v
 echo "1 设置实验参数，为了避免错误，使用绝对路径."
-D1="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/ERR5396170"      # Zymo
-D2="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/rel_6"           # Human-NA12878
-D3="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/rel7"            # Human: CHM13
-D4="/public/home/jd_sunhui/genCompressor/LRCB/data/realData/ERR5455028"      # Banana
-D5="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/PacBio30_0001"    # PacBio-30x
-D6="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/PacBio50_0001"    # PacBio-50x
-D7="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/PacBio70_0001"    # PacBio-70x
-D8="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/Nanopore20_0001"  # Nanopore-20x
-D9="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/Nanopore40_0001"  # Nanopore-40x
-D10="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/Nanopore60_0001" # Nanopore-60x
-D11="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.050"    # SimERR-5%
-D12="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.100"    # SimERR-10%
-D13="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.150"    # SimERR-15%
-D14="/public/home/jd_sunhui/genCompressor/LRCB/data/simData/SimERR_0.200"    # SimERR-20%
 ResultDir="/public/home/jd_sunhui/genCompressor/LRCB/result"
 Algorithm="zpaq"
 threads=16
@@ -54,11 +40,12 @@ else
 fi
 
 # 创建一个写入记录的VCF文件
-echo "DataSet, CompressedFileSize (B),CompressionRatio (bits/base),CompressionTime (S),CompressionMemory (KB),DeCompressionTime (S),DeCompressionMemory (KB)" > ${mkresdir}/${Algorithm}_${threads}.csv
+echo "DataSet, CompressedFileSize (B),CompressionRatio (bits/base),CompressionTime (S),CompressionMemory (KB),DeCompressionTime (S),DeCompressionMemory (KB)" >${mkresdir}/${Algorithm}_${threads}.csv
 cd ${mkresdir} # 切换到算法工作目录, colord输出的单位为B
 
 echo "3 执行算法压缩及解压缩操作"
-for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D14; do #D14 $D13 $D12 $D11 $D5 $D6 $D7 $D8 $D9 $D10 $D1 $D2 $D3 $D4
+F_NAME=$(cat /public/home/jd_sunhui/genCompressor/LRCB/script/F_Name.txt | tr -d '\r')
+for SourceDataDir in $F_NAME; do
   echo "-------------------------------------------------------------------------------------------"
   echo "SourceDataDir : ${SourceDataDir}"
   FileBaseName=$(basename ${SourceDataDir})
@@ -85,7 +72,8 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
 
   echo "3.3 调用${Algorithm}进行文件解压缩操作"
   echo "de-compression..."
-  (/bin/time -v -p zpaq x ${FileBaseName}.zpaq -method 5 -threads ${threads}) > ${FileBaseName}_${threads}_decom.log 2>&1
+  rm -rf ${FileBaseName}.reads
+  (/bin/time -v -p zpaq x ${FileBaseName}.zpaq -method 5 -threads ${threads}) >${FileBaseName}_${threads}_decom.log 2>&1
   echo "统计压缩信息"
   DeCompressionTime=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   DeCompressionMemory=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
@@ -107,12 +95,8 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
   rm -rf ${FileBaseName}.zpaq
 
   echo "3.6 将结果存储在CSV文件"
-  echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, $(timer_reans $CompressionTime), ${CompressionMemory}, $(timer_reans $DeCompressionTime), ${DeCompressionMemory}" >> ${Algorithm}_${threads}.csv
+  echo "${FileBaseName}, ${CompressedFileSize}, ${CompressionRatio}, $(timer_reans $CompressionTime), ${CompressionMemory}, $(timer_reans $DeCompressionTime), ${DeCompressionMemory}" >>${Algorithm}_${threads}.csv
 done
-
-
-
-
 
 exit 0
 #!/bin/bash
