@@ -82,13 +82,13 @@ compressors GeCo, GeCo2, GeCo3, NAF, and MFCompress into the dedicated compressi
 We also provide test code for these algorithms, found at https://github.com/fahaihi/LRCB/tree/master/script. We recommend users run these script files using absolute paths to avoid environmental errors. A summary description of the testing of compression algorithms can be found in our supplementary materials (https://github.com/fahaihi/LRCB/tree/master/Supplementary.pdf).
 
 ## Experimental Configuration
-Our experiment was conducted on the SUGON-7000A supercomputer system at the Nanning Branch of the National Supercomputing Center, using a queue of CPU/GPU heterogeneous computing nodes. The compute nodes used in the experiment were configured as follows: 
+Our experiment was conducted on the SUGON-7000A supercomputer system at the Nanning Branch of the National Supercomputing Center (https://hpc.gxu.edu.cn), using a queue of CPU/GPU heterogeneous computing nodes. The compute nodes used in the experiment were configured as follows: 
   
   2\*Intel Xeon Gold 6230 CPU (2.1Ghz, total 40 cores), 
   
   2\*NVIDIA Tesla-T4 GPU (16GB CUDA memory, 2560 CUDA cores), 
   
-  512GB DDR4 memory, and 
+  192GB DDR4 memory, and 
   
   8\*900GB external storage.
 
