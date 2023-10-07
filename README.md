@@ -1,8 +1,7 @@
                                                                                                                             
                                                                                                                                                       
 ## About The LRCB 
-LRCB (Long Reads Compression Benchmark), which is a comprehensive benchmark evaluation of the most state-of-
-the-art reference-free lossless dedicated and general compressors for long reads data. 
+LRCB (Long Reads Compression Benchmark) is a comprehensive benchmark evaluation of the SOTA lossless dedicated and general compressors for long reads data. 
 
 In our benchmark, we performed examinations on 26 reference-free lossless compressors, including 11 specialized for long reads collection and 14 general-purpose ones, using
 31 real-world datasets with differing sequencing lengths, platforms, and species. Each loss-less compressor was evaluated on 13 performance measures, including compression robustness, compression strength, as well as time and peak memory required for compression and
