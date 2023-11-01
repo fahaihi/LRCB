@@ -90,7 +90,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
 
   echo "3.2 调用${Algorithm}进行文件压缩操作"
   echo "compression..."
-  (/bin/time -v -p nncp c ${FileBaseName}.reads ${FileBaseName}.nncp) >${FileBaseName}_${threads}_com.log 2>&1
+  (/bin/time -v -p nncp c ${FileBaseName}.reads ${FileBaseName}.nncp -T 16 --cuda) >${FileBaseName}_${threads}_com.log 2>&1
   echo "统计压缩信息"
   CompressedFileSize=$(ls -lah --block-size=1 ${FileBaseName}.nncp | awk '/^[-d]/ {print $5}')
   CompressionTime=$(cat ${FileBaseName}_${threads}_com.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
@@ -106,7 +106,7 @@ for SourceDataDir in $D1 $D2 $D3 $D4 $D5 $D6 $D7 $D8 $D9 $D10 $D11 $D12 $D13 $D1
 
   echo "3.3 调用${Algorithm}进行文件解压缩操作"
   echo "de-compression..."
-  (/bin/time -v -p nncp d ${FileBaseName}.nncp ${FileBaseName}.nncp.reads) >${FileBaseName}_${threads}_decom.log 2>&1
+  (/bin/time -v -p nncp d ${FileBaseName}.nncp ${FileBaseName}.nncp.reads -T 16 --cuda) >${FileBaseName}_${threads}_decom.log 2>&1
   echo "统计压缩信息"
   DeCompressionTime=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Elapsed (wall clock) time (h:mm:ss or m:ss):.*' | awk '{print $8}')
   DeCompressionMemory=$(cat ${FileBaseName}_${threads}_decom.log | grep -o 'Maximum resident set size.*' | grep -o '[0-9]*')
